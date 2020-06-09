@@ -1,5 +1,4 @@
-from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView
 
 from .forms import PostForm
@@ -22,7 +21,7 @@ def new_post(request):
         if form.is_valid():
             post = Post(**form.cleaned_data, author=request.user)
             post.save()
-            return HttpResponseRedirect('/')
+            return redirect('/')
     else:
         form = PostForm()
     return render(request, "new_post.html", {"form": form})
