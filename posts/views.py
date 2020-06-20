@@ -3,7 +3,7 @@ from django.views.generic import CreateView
 from django.core.paginator import Paginator
 
 from .forms import PostForm
-from .models import Post, Group
+from .models import Post, Group, User
 
 
 def index(request):
@@ -34,3 +34,24 @@ def new_post(request):
     else:
         form = PostForm()
     return render(request, "new_post.html", {"form": form})
+
+def profile(request, username):
+        user = get_object_or_404(User, username = username)
+        name = user.get_full_name()
+        user_name = user.get_username()
+        posts = user.posts.count()
+        all_posts = user.posts.order_by('-pub_date').all()[:12]
+        return render(request, 'profile.html', {'user': user, 'name': name, 'username': user_name, "posts": posts, 'all_posts': all_posts})
+ 
+ 
+#def post_view(request, username, post_id):
+        # тут тело функции
+#        return render(request, 'post.html', {})
+
+
+#def post_edit(request, username, post_id):
+        # тут тело функции. Не забудьте проверить, 
+        # что текущий пользователь — это автор записи.
+        # В качестве шаблона страницы редактирования укажите шаблон создания новой записи
+        # который вы создали раньше (вы могли назвать шаблон иначе)
+  #      return render(request, 'post_new.html', {})
