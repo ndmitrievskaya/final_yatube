@@ -32,7 +32,7 @@
             </div>
 
             <div class="col-md-9">                
-                {% for post in all_posts %}
+                {% for post in page %}
                     <div class="card mb-3 mt-1 shadow-sm">
                             <div class="card-body">
                                     <p class="card-text">
@@ -56,7 +56,9 @@
 
                 {% endfor %}  
 
-                <!-- Здесь постраничная навигация паджинатора -->
+            {% if page.has_other_pages %}
+                {% include "paginator.html" with items=page paginator=paginator %}
+            {% endif %}
      </div>
     </div>
 </main>

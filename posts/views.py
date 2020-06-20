@@ -36,17 +36,31 @@ def new_post(request):
     return render(request, "new_post.html", {"form": form})
 
 def profile(request, username):
-        user = get_object_or_404(User, username = username)
-        name = user.get_full_name()
-        user_name = user.get_username()
-        posts = user.posts.count()
-        all_posts = user.posts.order_by('-pub_date').all()[:12]
-        return render(request, 'profile.html', {'user': user, 'name': name, 'username': user_name, "posts": posts, 'all_posts': all_posts})
+    user = get_object_or_404(User, username = username)
+    name = user.get_full_name()
+    user_name = user.get_username()
+    posts = user.posts.count()
+    all_posts = user.posts.order_by('-pub_date').all()
+    paginator = Paginator(all_posts, 10)
+
+    page_number = request.GET.get('page') 
+    page = paginator.get_page(page_number) 
+    return render(
+        request, 
+        'profile.html', 
+        {'user': user, 'name': name, 'username': user_name, "posts": posts, 'page': page, 'paginator': paginator}
+        )
  
  
-#def post_view(request, username, post_id):
-        # тут тело функции
-#        return render(request, 'post.html', {})
+def post_view(request, username, post_id):
+    user = get_object_or_404(User, username = username)
+    name = user.get_full_name()
+    user_name = user.get_username()
+    posts = user.posts.count()
+    post = get_object_or_404(Post, id__exact=post_id, author__exact = user)
+    #post = Post.objects.get(id__exact=post_id, author__exact = user)
+    #post = Post.objects.filter(author = user_name, id = post_id)
+    return render(request, 'post.html', {'user': user, 'name': name, 'username': user_name, "posts": posts, 'post': post})
 
 
 #def post_edit(request, username, post_id):
