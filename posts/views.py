@@ -32,9 +32,11 @@ def new_post(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
-            post = Post(**form.cleaned_data, author=request.user)
-            post.save()
-            return redirect('/')
+            if request.user.is_authenticated:
+                post = Post(**form.cleaned_data, author=request.user)
+                post.save()
+                return redirect('/')
+            return redirect('/auth/login')    
     else:
         form = PostForm()
     return render(request, "new_post.html", {"form": form})
