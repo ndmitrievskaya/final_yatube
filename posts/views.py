@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views.generic import CreateView
 from django.core.paginator import Paginator
 
@@ -21,8 +21,12 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()[:12]
-    return render(request, "group.html", {"group": group, "posts": posts})
+    posts = group.posts.all()
+    paginator = Paginator(posts, 10)
+
+    page_number = request.GET.get('page') 
+    page = paginator.get_page(page_number) 
+    return render(request, "group.html", {"group": group, 'page': page, 'paginator': paginator})
 
 def new_post(request):
     if request.method == 'POST':
@@ -36,11 +40,11 @@ def new_post(request):
     return render(request, "new_post.html", {"form": form})
 
 def profile(request, username):
-    user = get_object_or_404(User, username = username)
-    name = user.get_full_name()
-    user_name = user.get_username()
-    posts = user.posts.count()
-    all_posts = user.posts.order_by('-pub_date').all()
+    requested_user = get_object_or_404(User, username = username)
+    name = requested_user.get_full_name()
+    user_name = requested_user.get_username()
+    posts = requested_user.posts.count()
+    all_posts = requested_user.posts.order_by('-pub_date').all()
     paginator = Paginator(all_posts, 10)
 
     page_number = request.GET.get('page') 
@@ -48,24 +52,33 @@ def profile(request, username):
     return render(
         request, 
         'profile.html', 
-        {'user': user, 'name': name, 'username': user_name, "posts": posts, 'page': page, 'paginator': paginator}
+        {'requested_user': requested_user, 'name': name, 'username': user_name, "posts": posts, 'page': page, 'paginator': paginator}
         )
  
  
 def post_view(request, username, post_id):
-    user = get_object_or_404(User, username = username)
-    name = user.get_full_name()
-    user_name = user.get_username()
-    posts = user.posts.count()
-    post = get_object_or_404(Post, id__exact=post_id, author__exact = user)
-    #post = Post.objects.get(id__exact=post_id, author__exact = user)
-    #post = Post.objects.filter(author = user_name, id = post_id)
-    return render(request, 'post.html', {'user': user, 'name': name, 'username': user_name, "posts": posts, 'post': post})
+    requested_user = get_object_or_404(User, username = username)
+    name = requested_user.get_full_name()
+    user_name = requested_user.get_username()
+    posts = requested_user.posts.count()
+    post = get_object_or_404(Post, id__exact=post_id, author__exact = requested_user)
+    return render(request, 'post.html', {'requested_user': requested_user, 'name': name, 'username': user_name, "posts": posts, 'post': post})
 
 
-#def post_edit(request, username, post_id):
-        # тут тело функции. Не забудьте проверить, 
-        # что текущий пользователь — это автор записи.
-        # В качестве шаблона страницы редактирования укажите шаблон создания новой записи
-        # который вы создали раньше (вы могли назвать шаблон иначе)
-  #      return render(request, 'post_new.html', {})
+def post_edit(request, username, post_id):
+    requested_user = get_object_or_404(User, username = username)
+    post = get_object_or_404(Post, id__exact=post_id, author__exact = requested_user)
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance = post)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect(reverse('post', args=[username, post_id]))
+    else:
+        if request.user != post.author:
+            return redirect(reverse('post', args=[username, post_id]))
+        else:
+            form = PostForm(instance=post)
+
+    return render(request, 'post_edit.html', { "form": form, 'username': username, 'post_id': post_id, 'post': post})
