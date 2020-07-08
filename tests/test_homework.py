@@ -32,7 +32,6 @@ def search_refind(execution, user_code):
 
 
 class TestPost:
-
     def test_post_model(self):
         model_fields = Post._meta.fields
         text_field = search_field(model_fields, 'text')
@@ -102,7 +101,6 @@ class TestPost:
 
 
 class TestGroup:
-
     def test_group_model(self):
         model_fields = Group._meta.fields
         title_field = search_field(model_fields, 'title')
@@ -138,7 +136,9 @@ class TestGroup:
         description = 'Тестовое описание группы'
 
         assert Group.objects.all().count() == 0
-        group = Group.objects.create(title=title, slug=slug, description=description)
+        group = Group.objects.create(title=title,
+                                     slug=slug,
+                                     description=description)
         assert Group.objects.all().count() == 1
         assert Group.objects.get(slug=slug).pk == group.pk
 
@@ -148,7 +148,6 @@ class TestGroup:
 
 
 class TestGroupView:
-
     @pytest.mark.django_db(transaction=True)
     def test_group_view(self, client, post_with_group):
         try:
@@ -173,19 +172,17 @@ class TestGroupView:
             'Отредактируйте HTML-шаблон, не найден тег закрытия цикла'
 
         assert re.search(
-            r'<\s*title\s*>\s*Записи\s+сообщества\s+' + group.title + r'\s+\|\s+Yatube\s*<\s*\/title\s*>',
-            html
+            r'<\s*title\s*>\s*Записи\s+сообщества\s+' + group.title +
+            r'\s+\|\s+Yatube\s*<\s*\/title\s*>', html
         ), 'Отредактируйте HTML-шаблон, не найдено название страницы `<title>Записи сообщества {{ название_группы }} | Yatube</title>`'
         assert re.search(
-            r'<\s*h1\s*>\s*' + group.title + r'\s*<\s*\/h1\s*>',
-            html
+            r'<\s*h1\s*>\s*' + group.title + r'\s*<\s*\/h1\s*>', html
         ), 'Отредактируйте HTML-шаблон, не найден заголовок группы `<h1>{{ название_группы }}</h1>`'
         assert re.search(
-            r'<\s*p\s*>\s*' + group.description + r'\s*<\s*\/p\s*>',
-            html
+            r'<\s*p\s*>\s*' + group.description + r'\s*<\s*\/p\s*>', html
         ), 'Отредактируйте HTML-шаблон, не найдено описание группы `<p>{{ описание_группы }}</p>`'
 
         assert re.search(
-            r'<\s*p(\s+class=".+"|\s*)>\s*' + post_with_group.text + r'\s*<\s*\/p\s*>',
-            html
+            r'<\s*p(\s+class=".+"|\s*)>\s*' + post_with_group.text +
+            r'\s*<\s*\/p\s*>', html
         ), 'Отредактируйте HTML-шаблон, не найден текст поста `<p>{{ текст_поста }}</p>`'
