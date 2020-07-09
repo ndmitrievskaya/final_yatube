@@ -69,8 +69,8 @@ def profile(request, username):
 
 def post_view(request, username, post_id):
     post = get_object_or_404(Post,
-                            id__exact=post_id,
-                            author__username=username)
+                             id__exact=post_id,
+                             author__username=username)
     requested_user = get_object_or_404(User, username=username)
     full_name = requested_user.get_full_name()
     post_count = requested_user.posts.count()
