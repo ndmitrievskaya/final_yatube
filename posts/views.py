@@ -71,16 +71,19 @@ def post_view(request, username, post_id):
     post = get_object_or_404(Post,
                              id__exact=post_id,
                              author__username=username)
-    requested_user = get_object_or_404(User, username=username)
-    full_name = requested_user.get_full_name()
-    post_count = requested_user.posts.count()
+    author = get_object_or_404(User, username=username)
+    full_name = author.get_full_name()
+    post_count = author.posts.count()
 
     return render(
-        request, 'post.html', {
+        request,
+        'post.html',
+        {
             'full_name': full_name,
             'username': username,
             "post_count": post_count,
-            'post': post
+            'post': post,
+            'author': author  # тесты требуют передавать автора в контекст
         })
 
 
