@@ -37,7 +37,8 @@ class TestScriptUser(TestCase):
             ('page', reverse('profile', args=[self.user.username]))
         ]
         for ctx_key, url in urls_with_ctx_key:
-            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
+            self.check_post_in_response_context(self.auth_client, url, ctx_key,
+                                                post)
 
     def test_unauthorized_new_post(self):
         response = self.unauth_client.post(reverse('new_post'),
@@ -64,7 +65,8 @@ class TestScriptUser(TestCase):
             ('page', reverse('profile', args=[self.user.username]))
         ]
         for ctx_key, url in urls_with_ctx_key:
-            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
+            self.check_post_in_response_context(self.auth_client, url, ctx_key,
+                                                post)
 
     def test_post_edit(self):
         new_text = 'Привет ревьюерам!'
@@ -80,4 +82,5 @@ class TestScriptUser(TestCase):
             ('page', reverse('profile', args=[self.user.username]))
         ]
         for ctx_key, url in urls_with_ctx_key:
-            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
+            self.check_post_in_response_context(self.auth_client, url, ctx_key,
+                                                post)

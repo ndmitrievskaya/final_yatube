@@ -101,7 +101,7 @@ def post_edit(request, username, post_id):
             post.author = request.user
             post.save()
             return redirect(reverse('post', args=[username, post_id]))
-    
+
     form = PostForm(instance=post)
 
     return render(request, 'post_edit.html', {
