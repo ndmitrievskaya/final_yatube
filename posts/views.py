@@ -71,7 +71,7 @@ def post_view(request, username, post_id):
     post = get_object_or_404(Post,
                              id__exact=post_id,
                              author__username=username)
-    author = get_object_or_404(User, username=username)
+    author = post.author
     full_name = author.get_full_name()
     post_count = author.posts.count()
 
@@ -93,6 +93,7 @@ def post_edit(request, username, post_id):
                              author__username=username)
     if request.user != post.author:
         return redirect(reverse('post', args=[username, post_id]))
+
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
@@ -100,8 +101,8 @@ def post_edit(request, username, post_id):
             post.author = request.user
             post.save()
             return redirect(reverse('post', args=[username, post_id]))
-    else:
-        form = PostForm(instance=post)
+    
+    form = PostForm(instance=post)
 
     return render(request, 'post_edit.html', {
         "form": form,

@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from django.shortcuts import reverse
 from django.test import TestCase, Client
 
@@ -30,7 +32,12 @@ class TestScriptUser(TestCase):
                                          follow=True)
         self.assertEqual(response.status_code, 200)
         post = Post.objects.get(text=post_text)
-        # если поста нет в БД, то будет выкинуто исключение и тест провалится
+        urls_with_ctx_key = [
+            ('post', reverse('post', args=[self.user.username, post.id])),
+            ('page', reverse('profile', args=[self.user.username]))
+        ]
+        for ctx_key, url in urls_with_ctx_key:
+            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
 
     def test_unauthorized_new_post(self):
         response = self.unauth_client.post(reverse('new_post'),
@@ -38,17 +45,26 @@ class TestScriptUser(TestCase):
                                            follow=True)
         self.assertRedirects(response, '/auth/login/')
 
-    def check_post_in_page(self, client, post, username):
-        response_post = client.get(reverse('post', args=[username, post.id]))
-        self.assertEqual(response_post.context["post"].id, post.id)
-        response_index = client.get(reverse('index'))
-        self.assertIn(post, response_index.context['page'])
-        response_profile = client.get(reverse('profile', args=[username]))
-        self.assertIn(post, response_profile.context['page'])
+    def check_post_in_response_context(self, client, url, ctx_key, post):
+        """
+        Asserts that after `client` gets `response` from `url`
+        its `response.context[ctx_key]` contains `post`.
+        """
+        response = client.get(url)
+        ctx_value = response.context[ctx_key]
+        if not isinstance(ctx_value, Iterable):
+            ctx_value = [ctx_value]
+        self.assertIn(post, ctx_value)
 
     def test_post_appears(self):
         post = Post.objects.create(text="Hello, World!", author=self.user)
-        self.check_post_in_page(self.auth_client, post, self.user.username)
+        urls_with_ctx_key = [
+            ('post', reverse('post', args=[self.user.username, post.id])),
+            ('page', reverse('index')),
+            ('page', reverse('profile', args=[self.user.username]))
+        ]
+        for ctx_key, url in urls_with_ctx_key:
+            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
 
     def test_post_edit(self):
         new_text = 'Привет ревьюерам!'
@@ -58,6 +74,10 @@ class TestScriptUser(TestCase):
                                          {'text': new_text},
                                          follow=True)
         self.assertEqual(Post.objects.get(id=post.id).text, new_text)
-        # Мы убедились, что обновлённый текст попал в базу данных, а это означает,
-        # что все соответствующие view будут отображать обновлённый текст.
-        self.check_post_in_page(self.auth_client, post, self.user.username)
+        urls_with_ctx_key = [
+            ('post', reverse('post', args=[self.user.username, post.id])),
+            ('page', reverse('index')),
+            ('page', reverse('profile', args=[self.user.username]))
+        ]
+        for ctx_key, url in urls_with_ctx_key:
+            self.check_post_in_response_context(self.auth_client, url, ctx_key, post)
