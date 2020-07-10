@@ -68,6 +68,10 @@ class TestScriptUser(TestCase):
             self.check_post_in_response_context(self.auth_client, url, ctx_key,
                                                 post)
 
+    def test_404_not_found(self):
+        response = self.auth_client.get('empty/url')
+        self.assertEqual(response.status_code, 404)
+
     def test_post_edit(self):
         new_text = 'Привет ревьюерам!'
         post = Post.objects.create(text="Hello, Nika", author=self.user)
