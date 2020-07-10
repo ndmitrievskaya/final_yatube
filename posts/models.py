@@ -24,6 +24,7 @@ class Post(models.Model):
                               null=True,
                               on_delete=models.SET_NULL,
                               related_name="posts")
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
 
     class Meta:
         ordering = ('-pub_date', )

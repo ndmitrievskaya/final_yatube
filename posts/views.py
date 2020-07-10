@@ -33,16 +33,16 @@ def group_posts(request, slug):
 
 
 def new_post(request):
+    form = PostForm(request.POST or None, files=request.FILES or None)
+
     if request.method == 'POST':
-        form = PostForm(request.POST)
         if form.is_valid():
             if request.user.is_authenticated:
                 post = Post(**form.cleaned_data, author=request.user)
                 post.save()
                 return redirect('/')
             return redirect('/auth/login')
-    else:
-        form = PostForm()
+
     return render(request, "new_post.html", {"form": form})
 
 
@@ -94,15 +94,14 @@ def post_edit(request, username, post_id):
     if request.user != post.author:
         return redirect(reverse('post', args=[username, post_id]))
 
+    form = PostForm(request.POST or None, files=request.FILES or None, instance=post)
+
     if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
             return redirect(reverse('post', args=[username, post_id]))
-
-    form = PostForm(instance=post)
 
     return render(request, 'post_edit.html', {
         "form": form,
