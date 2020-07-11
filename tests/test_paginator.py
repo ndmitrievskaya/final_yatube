@@ -4,6 +4,7 @@ from django.core.paginator import Paginator, Page
 
 
 class TestGroupPaginatorView:
+
     @pytest.mark.django_db(transaction=True)
     def test_group_paginator_view_get(self, client, post_with_group):
         try:

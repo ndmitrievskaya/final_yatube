@@ -6,13 +6,13 @@ from django.contrib.auth import get_user_model
 
 def get_field_context(context, field_type):
     for field in context.keys():
-        if field not in ('user', 'request') and type(
-                context[field]) == field_type:
+        if field not in ('user', 'request') and type(context[field]) == field_type:
             return context[field]
     return
 
 
 class TestProfileView:
+
     @pytest.mark.django_db(transaction=True)
     def test_profile_view_get(self, client, post_with_group):
         try:
