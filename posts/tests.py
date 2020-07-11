@@ -21,8 +21,8 @@ class TestScriptUser(TestCase):
             reverse("profile", args=[self.user.username]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["page"]), 0)
-        self.assertIsInstance(response.context["requested_user"], User)
-        self.assertEqual(response.context["requested_user"].username,
+        self.assertIsInstance(response.context["profile"], User)
+        self.assertEqual(response.context["profile"].username,
                          self.user.username)
 
     def test_new_post(self):
@@ -77,8 +77,8 @@ class TestScriptUser(TestCase):
         post = Post.objects.create(text="Hello, Nika", author=self.user)
         response = self.auth_client.post(reverse(
             'post_edit', args=[self.user.username, post.id]),
-                                         {'text': new_text},
-                                         follow=True)
+            {'text': new_text},
+            follow=True)
         self.assertEqual(Post.objects.get(id=post.id).text, new_text)
         urls_with_ctx_key = [
             ('post', reverse('post', args=[self.user.username, post.id])),
