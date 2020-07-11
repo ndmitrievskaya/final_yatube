@@ -2,8 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views.generic import CreateView
 from django.core.paginator import Paginator
 
-from .forms import PostForm
-from .models import Post, Group, User
+from .forms import CommentForm, PostForm
+from .models import Comment, Post, Group, User
 
 
 def index(request):
@@ -75,6 +75,8 @@ def post_view(request, username, post_id):
     full_name = author.get_full_name()
     post_count = author.posts.count()
 
+    comment_form = CommentForm()
+
     return render(
         request,
         'post.html',
@@ -83,6 +85,7 @@ def post_view(request, username, post_id):
             'username': username,
             "post_count": post_count,
             'post': post,
+            'comment_form': comment_form,
             'author': author  # тесты требуют передавать автора в контекст
         })
 
@@ -94,7 +97,9 @@ def post_edit(request, username, post_id):
     if request.user != post.author:
         return redirect(reverse('post', args=[username, post_id]))
 
-    form = PostForm(request.POST or None, files=request.FILES or None, instance=post)
+    form = PostForm(request.POST or None,
+                    files=request.FILES or None,
+                    instance=post)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -117,3 +122,19 @@ def page_not_found(request, exception):
 
 def server_error(request):
     return render(request, "misc/500.html", status=500)
+
+
+def add_comment(request, username, post_id):
+    form = CommentForm(request.POST or None, files=request.FILES or None)
+
+    if not request.user.is_authenticated:
+        return redirect("post", username=username, post_id=post_id)
+
+    post = get_object_or_404(Post,
+                             id__exact=post_id,
+                             author__username=username)
+    assert form.is_valid()
+    comment = Comment(**form.cleaned_data, author=request.user, post=post)
+    comment.save()
+
+    return redirect("post", username=username, post_id=post_id)
