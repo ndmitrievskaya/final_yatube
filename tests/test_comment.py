@@ -31,7 +31,6 @@ def search_refind(execution, user_code):
 
 
 class TestComment:
-
     def test_comment_model(self):
         model_fields = Comment._meta.fields
         text_field = search_field(model_fields, 'text')
@@ -65,7 +64,9 @@ class TestComment:
             response = client.get(f'/{post.author.username}/{post.id}/comment')
         except Exception as e:
             assert False, f'''Страница `/<username>/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
-        if response.status_code in (301, 302) and response.url == f'/{post.author.username}/{post.id}/comment/':
+        if response.status_code in (
+                301, 302
+        ) and response.url == f'/{post.author.username}/{post.id}/comment/':
             url = f'/{post.author.username}/{post.id}/comment/'
         else:
             url = f'/{post.author.username}/{post.id}/comment'
@@ -73,16 +74,20 @@ class TestComment:
             'Страница `/<username>/<post_id>/comment/` не найдена, проверьте этот адрес в *urls.py*'
 
         response = client.post(url, data={'text': 'Новый коммент!'})
-        if not(response.status_code in (301, 302) and response.url.startswith(f'/auth/login')):
+        if not (response.status_code in (301, 302)
+                and response.url.startswith(f'/auth/login')):
             assert False, 'Проверьте, что не авторизованного пользователя `/<username>/<post_id>/comment/` отправляете на страницу авторизации'
 
     @pytest.mark.django_db(transaction=True)
     def test_comment_add_auth_view(self, user_client, post):
         try:
-            response = user_client.get(f'/{post.author.username}/{post.id}/comment')
+            response = user_client.get(
+                f'/{post.author.username}/{post.id}/comment')
         except Exception as e:
             assert False, f'''Страница `/<username>/<post_id>/comment/` работает неправильно. Ошибка: `{e}`'''
-        if response.status_code in (301, 302) and response.url == f'/{post.author.username}/{post.id}/comment/':
+        if response.status_code in (
+                301, 302
+        ) and response.url == f'/{post.author.username}/{post.id}/comment/':
             url = f'/{post.author.username}/{post.id}/comment/'
         else:
             url = f'/{post.author.username}/{post.id}/comment'
@@ -94,7 +99,9 @@ class TestComment:
 
         assert response.status_code in (301, 302), \
             'Проверьте, что со страницы `/<username>/<post_id>/comment/` после создания комментария перенаправляете на страницу поста'
-        comment = Comment.objects.filter(text=text, post=post, author=post.author).first()
+        comment = Comment.objects.filter(text=text,
+                                         post=post,
+                                         author=post.author).first()
         assert comment is not None, \
             'Проверьте, что вы создаёте новый комментарий `/<username>/<post_id>/comment/`'
         assert response.url.startswith(f'/{post.author.username}/{post.id}'), \

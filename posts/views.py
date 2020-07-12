@@ -52,8 +52,8 @@ def profile(request, username):
     all_posts = requested_user.posts.all()
     paginator = Paginator(all_posts, 10)
 
-    is_following = request.user.is_authenticated and Follow.objects.filter(author=requested_user,
-                                                                           user=request.user).count()
+    is_following = request.user.is_authenticated and Follow.objects.filter(
+        author=requested_user, user=request.user).count()
 
     follower_count = Follow.objects.filter(author=requested_user).count()
     follows_count = Follow.objects.filter(user=requested_user).count()
@@ -82,7 +82,8 @@ def post_view(request, username, post_id):
 
     comment_form = CommentForm()
 
-    is_following = request.user.is_authenticated and Follow.objects.filter(author=author, user=request.user).count()
+    is_following = request.user.is_authenticated and Follow.objects.filter(
+        author=author, user=request.user).count()
 
     follower_count = Follow.objects.filter(author=author).count()
     follows_count = Follow.objects.filter(user=author).count()
@@ -94,7 +95,8 @@ def post_view(request, username, post_id):
             'profile': author,
             "post_count": post_count,
             'post': post,
-            'comments': post.comments.all(),  # передавать `post` достаточно, но тесты требуют QuerySet в явном виде
+            'comments': post.comments.all(
+            ),  # передавать `post` достаточно, но тесты требуют QuerySet в явном виде
             'comment_form': comment_form,
             'following': is_following,
             'follower_count': follower_count,

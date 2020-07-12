@@ -27,7 +27,7 @@ class Post(models.Model):
     image = models.ImageField(upload_to='posts/', blank=True, null=True)
 
     class Meta:
-        ordering = ('-pub_date',)
+        ordering = ('-pub_date', )
 
     def __str__(self):
         return self.text

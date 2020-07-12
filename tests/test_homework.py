@@ -33,7 +33,6 @@ def search_refind(execution, user_code):
 
 
 class TestPost:
-
     def test_post_model(self):
         model_fields = Post._meta.fields
         text_field = search_field(model_fields, 'text')
@@ -111,7 +110,6 @@ class TestPost:
 
 
 class TestGroup:
-
     def test_group_model(self):
         model_fields = Group._meta.fields
         title_field = search_field(model_fields, 'title')
@@ -147,7 +145,9 @@ class TestGroup:
         description = 'Тестовое описание группы'
 
         assert Group.objects.all().count() == 0
-        group = Group.objects.create(title=title, slug=slug, description=description)
+        group = Group.objects.create(title=title,
+                                     slug=slug,
+                                     description=description)
         assert Group.objects.all().count() == 1
         assert Group.objects.get(slug=slug).pk == group.pk
 
@@ -157,7 +157,6 @@ class TestGroup:
 
 
 class TestGroupView:
-
     @pytest.mark.django_db(transaction=True)
     def test_group_view(self, client, post_with_group):
         try:
