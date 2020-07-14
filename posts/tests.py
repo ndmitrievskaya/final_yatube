@@ -1,8 +1,9 @@
+import io
 from collections.abc import Iterable
-from time import sleep
 
 from django.shortcuts import reverse
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
+from PIL import Image
 
 from .models import Post, User, Group, Follow
 
@@ -85,8 +86,8 @@ class TestScriptUser(TestCase):
         post = Post.objects.create(text="Hello, Nika", author=self.sarah)
         response = self.sarah_client.post(reverse(
             'post_edit', args=[self.sarah.username, post.id]),
-                                          {'text': new_text},
-                                          follow=True)
+            {'text': new_text},
+            follow=True)
         self.assertEqual(Post.objects.get(id=post.id).text, new_text)
         urls_with_ctx_key = [
             ('post', reverse('post', args=[self.sarah.username, post.id])),
@@ -97,20 +98,21 @@ class TestScriptUser(TestCase):
             self.check_post_in_response_context(self.sarah_client, url,
                                                 ctx_key, post)
 
-    def test_follow_unfollow(self):
-        author_username = self.jack.username
-
+    def test_follow(self):
         follow_response = self.sarah_client.post(reverse(
-            'profile_follow', args=[author_username]),
-                                                 follow=True)
+            'profile_follow', args=[self.jack.username]),
+            follow=True)
         self.assertEqual(follow_response.status_code, 200)
         self.assertEqual(
             Follow.objects.filter(user=self.sarah, author=self.jack).count(),
             1)
 
+    def test_unfollow(self):
+        Follow.objects.create(user=self.sarah, author=self.jack)
+
         unfollow_response = self.sarah_client.post(reverse(
-            'profile_unfollow', args=[author_username]),
-                                                   follow=True)
+            'profile_unfollow', args=[self.jack.username]),
+            follow=True)
         self.assertEqual(unfollow_response.status_code, 200)
         self.assertEqual(
             Follow.objects.filter(user=self.sarah, author=self.jack).count(),
@@ -152,16 +154,26 @@ class TestScriptUser(TestCase):
                              fetch_redirect_response=True)
         self.assertEqual(len(post.comments.all()), 1)
 
+    @staticmethod
+    def sample_image_file():
+        img_file = io.BytesIO()
+        img = Image.new('RGB', size=(200, 200), color=(255, 0, 0))
+        img.save(img_file, 'PNG')
+        img_file.name = 'test.png'
+        img_file.seek(0)
+
+        return img_file
+
+    @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
     def test_thumbnail(self):
         post_text = 'Margaret Hamilton developed on-board flight software for NASA\'s Apollo program.'
 
-        with open('tests/data/Margaret_Hamilton.jpg', 'rb') as img:
-            self.sarah_client.post(reverse('new_post'), {
-                'text': post_text,
-                'image': img,
-                'group': self.group.id
-            },
-                                   follow=True)
+        self.sarah_client.post(reverse('new_post'), {
+            'text': post_text,
+            'image': self.sample_image_file(),
+            'group': self.group.id
+        }, follow=True)
+
         post = Post.objects.get(text=post_text)
 
         post_response = self.sarah_client.get(
@@ -176,19 +188,28 @@ class TestScriptUser(TestCase):
             reverse('group_posts', args=[self.group.slug]))
         self.assertContains(group_response, text='img', count=2)
 
-        sleep(20)  # let cache become stale
-
         index_response = self.sarah_client.get(reverse('index'))
         self.assertContains(index_response, text='img', count=2)
 
     def test_non_img_file(self):
-        with open('README.md', 'rb') as file:
-            self.sarah_client.post(reverse('new_post'), {
-                'text': 'test_non_img',
-                'image': file,
-                'group': self.group.id
-            },
-                                   follow=True)
-        self.assertRaises(Post.DoesNotExist,
-                          Post.objects.get,
-                          text='test_non_img')
+        file = io.BytesIO(b'This is not an image!')
+        error = 'Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.'
+        response = self.sarah_client.post(reverse('new_post'), {
+            'text': 'test_non_img',
+            'image': file,
+            'group': self.group.id
+        }, follow=True)
+        self.assertFormError(response, 'form', 'image', error)
+
+    def test_caching(self):
+        # кэш корректно ведёт себя в браузере, но этот тест проваливается!
+        # не могу заставить его проходить
+
+        post_text = 'test caching'
+        self.sarah_client.post(reverse('new_post'), {
+            'text': post_text,
+        }, follow=True)
+
+        cached_response = self.sarah_client.get(reverse('index'))
+
+        self.assertNotContains(cached_response, post_text)

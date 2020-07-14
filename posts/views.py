@@ -7,8 +7,8 @@ from .models import Comment, Post, Group, User, Follow
 
 
 def index(request):
-    post_list = Post.objects.all()
-    paginator = Paginator(post_list, 10)
+    posts = Post.objects.all()
+    paginator = Paginator(posts, 10)
 
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -53,7 +53,7 @@ def profile(request, username):
     paginator = Paginator(all_posts, 10)
 
     is_following = request.user.is_authenticated and Follow.objects.filter(
-        author=requested_user, user=request.user).count()
+        author=requested_user, user=request.user).exists()
 
     follower_count = Follow.objects.filter(author=requested_user).count()
     follows_count = Follow.objects.filter(user=requested_user).count()
@@ -83,10 +83,12 @@ def post_view(request, username, post_id):
     comment_form = CommentForm()
 
     is_following = request.user.is_authenticated and Follow.objects.filter(
-        author=author, user=request.user).count()
+        author=author, user=request.user).exists()
 
     follower_count = Follow.objects.filter(author=author).count()
     follows_count = Follow.objects.filter(user=author).count()
+
+    comments = post.comments.all()
 
     return render(
         request,
@@ -95,8 +97,7 @@ def post_view(request, username, post_id):
             'profile': author,
             "post_count": post_count,
             'post': post,
-            'comments': post.comments.all(
-            ),  # передавать `post` достаточно, но тесты требуют QuerySet в явном виде
+            'comments': comments,  # передавать `post` достаточно, но тесты требуют QuerySet в явном виде
             'comment_form': comment_form,
             'following': is_following,
             'follower_count': follower_count,
@@ -181,5 +182,7 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    get_object_or_404(Follow, author=author, user=request.user).delete()
+    follow = Follow.objects.filter(author=author, user=request.user).first()
+    if follow is not None:
+        follow.delete()
     return redirect('profile', username=username)
