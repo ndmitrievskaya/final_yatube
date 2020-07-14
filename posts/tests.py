@@ -1,6 +1,7 @@
 import io
 from collections.abc import Iterable
 
+from django.core.cache import cache
 from django.shortcuts import reverse
 from django.test import TestCase, Client, override_settings
 from PIL import Image
@@ -202,8 +203,7 @@ class TestScriptUser(TestCase):
         self.assertFormError(response, 'form', 'image', error)
 
     def test_caching(self):
-        # кэш корректно ведёт себя в браузере, но этот тест проваливается!
-        # не могу заставить его проходить
+        _ = self.sarah_client.get(reverse('index'))
 
         post_text = 'test caching'
         self.sarah_client.post(reverse('new_post'), {
