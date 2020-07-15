@@ -155,23 +155,19 @@ class TestScriptUser(TestCase):
                              fetch_redirect_response=True)
         self.assertEqual(len(post.comments.all()), 1)
 
-    @staticmethod
-    def sample_image_file():
+    @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
+    def test_thumbnail(self):
+        post_text = 'Margaret Hamilton developed on-board flight software for NASA\'s Apollo program.'
+
         img_file = io.BytesIO()
         img = Image.new('RGB', size=(200, 200), color=(255, 0, 0))
         img.save(img_file, 'PNG')
         img_file.name = 'test.png'
         img_file.seek(0)
 
-        return img_file
-
-    @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
-    def test_thumbnail(self):
-        post_text = 'Margaret Hamilton developed on-board flight software for NASA\'s Apollo program.'
-
         self.sarah_client.post(reverse('new_post'), {
             'text': post_text,
-            'image': self.sample_image_file(),
+            'image': img_file,
             'group': self.group.id
         }, follow=True)
 

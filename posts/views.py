@@ -97,7 +97,7 @@ def post_view(request, username, post_id):
             'profile': author,
             "post_count": post_count,
             'post': post,
-            'comments': comments,  # передавать `post` достаточно, но тесты требуют QuerySet в явном виде
+            'comments': comments,
             'comment_form': comment_form,
             'following': is_following,
             'follower_count': follower_count,
