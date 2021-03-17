@@ -16,7 +16,21 @@ pip install -r requirements.txt
 ```
 
 ### How to use
-For running the service you may use the command below
+To start the app you need only one simple command, but first you need to collect static. 
+You may do it with the command below
+
+```
+python manage.py collectstatic
+```
+
+You will also need to make migrations and create superuser using commands below
+
+```
+python manage.py migrate
+python manage.py createsuperuser 
+```
+
+Finally, for running the service you may use the command below
 
 ```
 python manage.py runserver
@@ -30,4 +44,4 @@ Then it will be callable on the host [localhost:8000/](localhost:8000/)
 
 ## Authors
 
-* **Nika Kabanova** - *Initial work* - [kabanovanika](https://github.com/kabanovanika)
+* **Nika Dmitrievskaya** - *Initial work* - [ndmitrievskaya](https://github.com/ndmitrievskaya)
